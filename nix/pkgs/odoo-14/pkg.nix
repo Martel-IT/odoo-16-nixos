@@ -19,14 +19,15 @@ in
   series = "16.0";
   version = "${series}.20230314";
 
-  src = fetchzip {
-    url = "https://repo.martel-consulting.ch/odoo-16.0.post20230314.tar.gz";
-    sha256 = "sha256-U1tz/ltJaqpUbQSHw/ff0oN8v97dfYbDcGdX57I4UQY=";
-    stripRoot = false;
-  };  
+  src = fetchFromGitHub {
+    owner = "Martel-IT";
+    repo = "odoo-16-core";
+    rev = "odoo-core-20230314-v1";
+    sha256 = "sha256-BTGXPdWUBMtR78p4zdmhlsuz7BtZRd2mwPe2ydDsNnM=";
+  };
 
                                                            # (2)
-  projectDir = "${src}/odoo-16.0.post20230314";
+  projectDir = "${src}/odoo-core-20230314-v1";
   pyproject = ./pyproject.toml;
   poetrylock = ./poetry.lock;
   python = python310;

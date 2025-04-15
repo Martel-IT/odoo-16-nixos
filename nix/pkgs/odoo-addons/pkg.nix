@@ -5,11 +5,11 @@
     stdenv, fetchFromGitHub, odoo-pkg ? null
 }:
 let
-  vendor = fetchFromGitHub {                                   # (1)
+  vendor = fetchFromGitHub {
     owner = "Martel-IT";
     repo = "odoo-16-addons";
-    rev = "odoo.box-vendor-addons-15.1-apr-2025";
-    sha256 = "sha256-nm7KBvUJugF8TS3phk+1zvGrstuk2RwCzZpoYcB0KgM=";
+    rev = "odoo.box-vendor-addons-15.2-apr-2025";
+    sha256 = "sha256-d1GfEgxUkrRUShYE6+X/nFZQ0qjMpQV7BRAfwh1YoZs=";
   };
 in stdenv.mkDerivation rec {
     pname = "odoo-addons";
