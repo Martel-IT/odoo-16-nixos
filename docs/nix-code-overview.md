@@ -121,7 +121,7 @@ We've developed the following Nix packages:
 [local-ca]: ../nix/modules/local-ca/docs.md
 [login]: ../nix/modules/login/docs.md
 [nix-dir]: ../nix/
-[odoo]: ../nix/pkgs/odoo-14/docs.md
+[odoo]: ../nix/pkgs/odoo-16/docs.md
 [os-base]: ../nix/modules/os-base.nix
 [snakeoil-sec]: ../nix/pkgs/snakeoil-sec/docs.md
 [svc-stack]: ../nix/modules/service-stack/docs.md

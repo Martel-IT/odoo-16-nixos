@@ -24,7 +24,7 @@ nixpkgs // {
 # NOTE
 # ----
 # 1. Unsecure/unmaintained libs. They shouldn't be used but Odoo indirectly
-# depends on them---see pkgs/odoo-14/pkg.nix. So we've got to override Nix's
+# depends on them---see pkgs/16/pkg.nix. So we've got to override Nix's
 # decision to leave them out of the package set.
 # 2. mkpasswd. Recent versions (up to `5.5.22`) won't compile with `clang`
 # > 14 on Apple Silicon. (Amazingly enough, source compiles just fine on
