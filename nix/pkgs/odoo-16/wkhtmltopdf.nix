@@ -31,7 +31,7 @@ in wkhtmltopdf.overrideAttrs (
 # 2. qtwebkit. wkhtmltopdf depends on qtwebkit which isn't supported
 # any more. If you try building Nix moans loudly about it, but tells
 # you what to do if you really want to include qtwebkit. See below the
-# output of `nix build .#odoo-14`.
+# output of `nix build .#odoo-16`.
 #
 # error: Package ‘qtwebkit-5.212.0-alpha4’ in /nix/store/[..] is marked
 #        as insecure, refusing to evaluate.

@@ -61,7 +61,7 @@ with types;
       };
       odoo-package = mkOption {
         type = package;
-        default = pkgs.odbox.odoo-14;
+        default = pkgs.odbox.odoo-16;
         description = "Odoo package to use.";
       };
       odoo-addons = mkOption {

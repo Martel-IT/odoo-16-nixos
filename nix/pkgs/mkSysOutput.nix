@@ -9,7 +9,7 @@
   ...
 }:
 let
-  odoo = import ./odoo-14 { inherit system; pkgs = sysPkgs; };
+  odoo = import ./odoo-16 { inherit system; pkgs = sysPkgs; };
   addons = import ./odoo-addons { pkgs = sysPkgs; odoo-pkg = odoo; };
   localhost-cert = import ./localhost-cert { pkgs = sysPkgs; };
   vaultgen = import ./vaultgen { pkgs = sysPkgs; };
@@ -21,7 +21,7 @@ in rec {
     default = tools.full-shell;
     dev-shell = tools.dev-shell;
     linux-admin-shell = tools.linux-admin-shell;
-    odoo-14 = odoo;
+    odoo-16 = odoo;
     odoo-addons = addons;
     inherit localhost-cert snakeoil-sec vaultgen db-init;
   };
