@@ -8,8 +8,8 @@ let
   vendor = fetchFromGitHub {
     owner = "Martel-IT";
     repo = "odoo-16-addons";
-    rev = "odoo.box-vendor-addons-19.2-may-2025";
-    sha256 = "sha256-qU4JCFpx+2Cx4pPAeBTUnaFS1CeJzQvYe5MFfJDqdDM=";
+    rev = "odoo.box-vendor-addons-19.3-may-2025";
+    sha256 = "sha256-xDI0bRF6YrdREb2X4CSFpkN/zcXl6bwHybG7Kjj5/v8=";
   };
 in stdenv.mkDerivation rec {
     pname = "odoo-addons";
