@@ -22,12 +22,12 @@ in
   src = fetchFromGitHub {
     owner = "Martel-IT";
     repo = "odoo-16-core";
-    rev = "odoo-core-20230314-v4";
-    sha256 = "sha256-7vMhSNPu4XRcFJrworWqXuksthW71TkP0ccHV9j8EN8=";
+    rev = "odoo-core-20230314-v5";
+    sha256 = "sha256-XbEGdqeApYBq+YSIFfZ5oTDv71yV7D3r+Y5Hi31aT1o=";
   };
 
                                                            # (2)
-  projectDir = "${src}/odoo-core-20230314-v4";
+  projectDir = "${src}/odoo-core-20230314-v5";
   pyproject = ./pyproject.toml;
   poetrylock = ./poetry.lock;
   python = python310;
