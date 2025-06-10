@@ -42,7 +42,7 @@ in {
     login.admin-email = "sys-admin@martel-innovate.com";
     service-stack = {
       autocerts = true;
-      domain = "odoo16-aarch64.martel-innovate.com";
+      domain = "odoo.martel-innovate.com";
       odoo-cpus = 4;
       odoo-session-timeout = 14 * 24 * 60;
     };
