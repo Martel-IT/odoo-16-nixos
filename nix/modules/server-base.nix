@@ -57,7 +57,7 @@ with types;
       enable = true;
       pgadmin-enable = true;
       # bootstrap-mode = true;
-      odoo-db-name = "odoo_martel_14";
+      odoo-db-name = "odoo_martel_16";
     };
   });
 
