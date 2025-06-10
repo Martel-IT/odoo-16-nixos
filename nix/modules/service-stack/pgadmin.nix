@@ -69,6 +69,27 @@ with lib;
         SERVER_MODE = True
         DEFAULT_SERVER_PORT = 5050
         CONFIG_DATABASE_URI = "${pgadmin-db-uri}"
+        
+        # SECRET_KEY stabile per CSRF - IMPORTANTE: cambia questo valore!
+        SECRET_KEY = '0AQu.£)qMM9VA`8b69{087:dh49]H\fA1$Q}ihP%'
+        
+        # Configurazioni per reverse proxy
+        APPLICATION_ROOT = '/pgadmin'
+        PREFERRED_URL_SCHEME = 'https'
+        
+        # Configurazioni sicure per cookies e CSRF
+        WTF_CSRF_SSL_STRICT = True
+        SESSION_COOKIE_SECURE = True
+        SESSION_COOKIE_HTTPONLY = True
+        SESSION_COOKIE_SAMESITE = 'Lax'
+        
+        # Riabilita CSRF con configurazioni corrette
+        WTF_CSRF_ENABLED = True
+        WTF_CSRF_TIME_LIMIT = 7200  # 2 ore invece del default di 1 ora
+        
+        # Configurazioni aggiuntive per stabilità
+        PERMANENT_SESSION_LIFETIME = 7200  # 2 ore
+        SESSION_COOKIE_NAME = 'pgadmin_session'
       '';
       mode = "0600";
       user = pgadmin-usr;
@@ -112,7 +133,7 @@ with lib;
 # won't work reliably in our case where we use Postgres as a PgAdmin
 # config DB instead of the built-in SQLite backend. Now the command
 # we and the NixOS module use to bootstrap the PgAdmin DB is the
-# `pgadmin4-setup` Python script from the `pgadmin4` Nix package.
+# `pgladmin4-setup` Python script from the `pgladmin4` Nix package.
 # This script won't create a Postgres DB, so we've got to create
 # one before the script runs. But to do that, Postgres must be up
 # and running, which won't necessarily be the case when the NixOS
@@ -124,12 +145,12 @@ with lib;
 # To prove the point, we tweaked the NixOS PgAdmin module to make
 # PgAdmin start after Postgres:
 #
-#     systemd.services.pgadmin.after = [ "postgresql.service" ];
-#     systemd.services.pgadmin.requires = [ "postgresql.service" ];
+#     systemd.services.pgladmin.after = [ "postgresql.service" ];
+#     systemd.services.pgladmin.requires = [ "postgresql.service" ];
 #
 # and created the PgAdmin DB through a script executed in the
 # `ExecStartPost` of the Postgres systemd service. Sure as hell,
-# every now and then the `pgadmin4-setup` script running as part
+# every now and then the `pgladmin4-setup` script running as part
 # of `ExecStartPre` in the PgAdmin service failed b/c the PgAdmin
 # DB wasn't there.
 # Long story short: the PgAdmin DB bootstrap should be done as
@@ -142,10 +163,10 @@ with lib;
 # get into a race condition where the bootstrap procedure runs
 # concurrently with the PgAdmin UI which will also try creating
 # tables and populating the DB---it uses the same setup module
-# as `pgadmin4-setup`. To prevent that, we make our setup service
+# as `pgladmin4-setup`. To prevent that, we make our setup service
 # a systemd "notify" service. This kind of service waits until it
 # receives a "ready" notification from the called command. Our
-# `pgadmin-boot` command actually uses `systemd-notify` to send
+# `pgladmin-boot` command actually uses `systemd-notify` to send
 # that signal after the whole bootstrap procedure has completed
 # successfully.
 #
