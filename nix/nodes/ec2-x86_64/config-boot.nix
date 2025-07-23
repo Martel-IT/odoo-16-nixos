@@ -10,5 +10,5 @@
     ./configuration.nix
   ];
 
-  odbox.service-stack.bootstrap-mode = true;
+  odbox.service-stack.bootstrap-mode = false;
 }

@@ -2,7 +2,7 @@
 # Put together the package set to pass in to Nixie package builder
 # functions like `nixie.lib.flakes.mkOutputSetForCoreSystems`.
 #
-{ nixpkgs, nixpkgs-2411, poetry2nix, agenix }:
+{ nixpkgs, nixpkgs-2411, poetry2nix, agenix, nixpkgs-2505 }:
 nixpkgs // {
   mkConfig = system: {
     permittedInsecurePackages = [
@@ -18,6 +18,7 @@ nixpkgs // {
         stdenv = prev.llvmPackages_14.stdenv;
       };
       wkhtmltopdf = nixpkgs-2411.legacyPackages.${system}.wkhtmltopdf;
+      sudo = nixpkgs-2505.legacyPackages.${system}.sudo;
     })
   ];
 }

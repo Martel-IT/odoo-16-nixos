@@ -54,7 +54,7 @@ with types;
   {
     # Enable Flakes.
     nix = {
-      package = pkgs.nixFlakes;
+      package = pkgs.nixVersions.stable;
       settings.experimental-features = [ "nix-command" "flakes" ];
     };
 
@@ -64,7 +64,7 @@ with types;
     environment.variables = {
       EDITOR = "emacs";    # NOTE (1)
     };
-    programs.bash.enableCompletion = true;
+    programs.bash.completion.enable = true;
 
     # Only allow to change users and groups through NixOS config.
     users.mutableUsers = false;
