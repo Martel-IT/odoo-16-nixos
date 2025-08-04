@@ -22,12 +22,12 @@ in
   src = fetchFromGitHub {
     owner = "Martel-IT";
     repo = "odoo-16-core";
-    rev = "odoo-core-20230314-v7";
-    sha256 = "sha256-LumrSyTDBPsKDY5elgdIlkWv+kQt5Ifj6j0SkXdMGdA=";
+    rev = "odoo-core-20250702-v9";
+    sha256 = "sha256-SkZS2LXmuDpe4si7cx49HfybmaqBXsoZ9qhzED9Z9+o=";
   };
 
                                                            # (2)
-  projectDir = "${src}/odoo-core-20230314-v7";
+  projectDir = "${src}/odoo-core-20250702-v9";
   pyproject = ./pyproject.toml;
   poetrylock = ./poetry.lock;
   python = python310;
@@ -99,3 +99,4 @@ in
 # 5.Stripping. The Odoo 15 package skips stripping, claiming it takes 5+
 # minutes and there are no files to strip. So we do the same.
 #
+ 
