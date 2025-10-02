@@ -12,7 +12,7 @@ in {
   imports = [ "${modulesPath}/virtualisation/amazon-image.nix" ];
 
   time.timeZone = "Europe/Amsterdam";
-  system.stateVersion = "23.11";
+  system.stateVersion = "24.11";
 
   fileSystems."${backup-mount-dir}" = {
     device = "/dev/disk/by-partlabel/backup";                  # (3)

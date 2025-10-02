@@ -64,37 +64,48 @@ with lib;
     # Set up PgAdmin sys config file.
     # Notice this is the only one we can use w/o having to repackage
     # the code to add `config_distro.py` or `config_local.py`.
-    environment.etc."pgadmin/config_system.py" = {
-      text = ''
-        SERVER_MODE = True
-        DEFAULT_SERVER_PORT = 5050
-        CONFIG_DATABASE_URI = "${pgadmin-db-uri}"
-        
-        # SECRET_KEY stabile per CSRF - IMPORTANTE: cambia questo valore!
-        SECRET_KEY = '0AQu.£)qMM9VA`8b69{087:dh49]H\fA1$Q}ihP%'
-        
-        # Configurazioni per reverse proxy
-        APPLICATION_ROOT = '/pgadmin'
-        PREFERRED_URL_SCHEME = 'https'
-        
-        # Configurazioni sicure per cookies e CSRF
-        WTF_CSRF_SSL_STRICT = True
-        SESSION_COOKIE_SECURE = True
-        SESSION_COOKIE_HTTPONLY = True
-        SESSION_COOKIE_SAMESITE = 'Lax'
-        
-        # Riabilita CSRF con configurazioni corrette
-        WTF_CSRF_ENABLED = True
-        WTF_CSRF_TIME_LIMIT = 7200  # 2 ore invece del default di 1 ora
-        
-        # Configurazioni aggiuntive per stabilità
-        PERMANENT_SESSION_LIFETIME = 7200  # 2 ore
-        SESSION_COOKIE_NAME = 'pgadmin_session'
-      '';
-      mode = "0600";
-      user = pgadmin-usr;
-      group = pgadmin-usr;
-    };
+environment.etc."pgadmin/config_system.py" = {
+  text = ''
+    SERVER_MODE = True
+    DEFAULT_SERVER_PORT = 5050
+    CONFIG_DATABASE_URI = "${pgadmin-db-uri}"
+    
+    # SECRET_KEY stabile per CSRF - IMPORTANTE: cambia questo valore!
+    SECRET_KEY = '0AQu.£)qMM9VA`8b69{087:dh49]H\fA1$Q}ihP%'
+    
+    # Configurazioni per reverse proxy
+    APPLICATION_ROOT = '/pgadmin'
+    PREFERRED_URL_SCHEME = 'https'
+    
+    # Configurazioni sicure per cookies e CSRF
+    WTF_CSRF_SSL_STRICT = True
+    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    
+    # Riabilita CSRF con configurazioni corrette
+    WTF_CSRF_ENABLED = True
+    WTF_CSRF_TIME_LIMIT = 7200  # 2 ore invece del default di 1 ora
+    
+    # Configurazioni aggiuntive per stabilità
+    PERMANENT_SESSION_LIFETIME = 7200  # 2 ore
+    SESSION_COOKIE_NAME = 'pgadmin_session'
+    
+    # NUOVE CONFIGURAZIONI per il pool di connessioni SQLAlchemy
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_size': 5,
+        'pool_recycle': 3600,
+        'pool_pre_ping': True,
+        'pool_use_lifo': True,
+        'connect_args': {
+            'connect_timeout': 10,
+        }
+    }
+  '';
+  mode = "0600";
+  user = pgadmin-usr;
+  group = pgadmin-usr;
+};
 
     # Run the PgAdmin DB bootstrap procedure as PgAdmin service user
     # only after Postgres has started.
@@ -102,7 +113,7 @@ with lib;
     # sets up a Postgres Unix socket connection the UI can use out
     # of the box.
     systemd.services.pgadmin-setup = mkService {
-        deps = [ "postgresql.service" ];
+        deps = [ "pgadmin-setup.service" "postgresql.service" ];
         path = [ pgadmin-pkg postgres-pkg ];
         command = ''
           ${pgadmin-boot} \
