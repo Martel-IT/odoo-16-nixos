@@ -70,31 +70,44 @@ with lib;
         DEFAULT_SERVER_PORT = 5050
         CONFIG_DATABASE_URI = "${pgadmin-db-uri}"
         
-        # SECRET_KEY stabile per CSRF - IMPORTANTE: cambia questo valore!
+        # SECRET_KEY - IMPORTANTE: cambia questo valore in produzione!
         SECRET_KEY = '0AQu.£)qMM9VA`8b69{087:dh49]H\fA1$Q}ihP%'
         
         # Configurazioni per reverse proxy
         APPLICATION_ROOT = '/pgadmin'
         PREFERRED_URL_SCHEME = 'https'
         
-        # Configurazioni sicure per cookies e CSRF
-        WTF_CSRF_SSL_STRICT = True
+        # FIX: Configura correttamente il proxy
+        PROXY_X_FOR_COUNT = 1
+        PROXY_X_PROTO_COUNT = 1
+        PROXY_X_HOST_COUNT = 1
+        
+        # Configurazioni sicure per cookies
         SESSION_COOKIE_SECURE = True
         SESSION_COOKIE_HTTPONLY = True
         SESSION_COOKIE_SAMESITE = 'Lax'
-        
-        # Riabilita CSRF con configurazioni corrette
-        WTF_CSRF_ENABLED = True
-        WTF_CSRF_TIME_LIMIT = 7200  # 2 ore invece del default di 1 ora
-        
-        # Configurazioni aggiuntive per stabilità
-        PERMANENT_SESSION_LIFETIME = 7200  # 2 ore
         SESSION_COOKIE_NAME = 'pgadmin_session'
+        SESSION_COOKIE_PATH = '/pgadmin'
+        PERMANENT_SESSION_LIFETIME = 7200
+        
+        # FIX CSRF: Più permissivo per reverse proxy
+        WTF_CSRF_ENABLED = True
+        WTF_CSRF_SSL_STRICT = False
+        WTF_CSRF_TIME_LIMIT = 7200
+        WTF_CSRF_CHECK_DEFAULT = False
+        
+        # Headers sicurezza
+        SECURITY_HEADERS = {
+            'X-Frame-Options': 'SAMEORIGIN',
+            'X-Content-Type-Options': 'nosniff',
+            'X-XSS-Protection': '1; mode=block',
+        }
       '';
       mode = "0600";
       user = pgadmin-usr;
       group = pgadmin-usr;
     };
+ 
 
     # Run the PgAdmin DB bootstrap procedure as PgAdmin service user
     # only after Postgres has started.

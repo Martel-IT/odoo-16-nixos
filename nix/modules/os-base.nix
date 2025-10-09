@@ -52,22 +52,9 @@ with types;
     tools = config.odbox.base.cli-tools;
   in (mkIf enabled
   {
-    # CVE-2025-32463 FIX - Override sudo to patched version
-    nixpkgs.overlays = [
-      (final: prev: {
-        sudo = prev.sudo.overrideAttrs (oldAttrs: rec {
-          version = "1.9.17p1";
-          src = prev.fetchurl {
-            url = "https://www.sudo.ws/dist/sudo-${version}.tar.gz";
-            sha256 = "0cjx8lkwlqz03psnaia07rz9mpyn5ilpixvqi9rrf8872ykpwq7z";
-          };
-        });
-      })
-    ];
-
     # Enable Flakes.
     nix = {
-      package = pkgs.nixFlakes;
+      package = pkgs.nixVersions.stable;
       settings.experimental-features = [ "nix-command" "flakes" ];
     };
 
@@ -77,7 +64,7 @@ with types;
     environment.variables = {
       EDITOR = "emacs";    # NOTE (1)
     };
-    programs.bash.enableCompletion = true;
+    programs.bash.completion.enable = true;
 
     # Only allow to change users and groups through NixOS config.
     users.mutableUsers = false;
@@ -92,4 +79,3 @@ with types;
 # 1. Command Paths. Should we use absolute paths to the Nix derivations?
 # Seems kinda pointless b/c programs added to systemPackages will be in
 # the PATH anyway...
-#

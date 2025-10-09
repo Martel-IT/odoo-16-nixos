@@ -56,6 +56,13 @@ with types;
         File containing the PgAdmin Web UI admin user's clear-text password.
       '';
     };
+    odbox.vault.cloudflare-tunnel-token-file = mkOption {
+      type = nullOr path;
+      default = null;
+      description = ''
+        File containing the Cloudflare Tunnel token.
+      '';
+    };    
     odbox.vault.nginx-cert = mkOption {
       type = nullOr path;
       default = null;

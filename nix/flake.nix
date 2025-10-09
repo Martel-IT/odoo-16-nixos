@@ -4,6 +4,7 @@
   inputs = {
     nixpkgs.url = "github:NixOs/nixpkgs/nixos-23.11";
     nixpkgs-2411.url = "github:NixOs/nixpkgs/nixos-24.11";
+    nixpkgs-2505.url = "github:NixOs/nixpkgs/nixos-25.05";
     nixie = {
       url = "github:c0c0n3/nixie";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -18,10 +19,10 @@
     };
   };
 
-  outputs = { self, nixpkgs, nixpkgs-2411, nixie, poetry2nix, agenix }:
+  outputs = { self, nixpkgs, nixpkgs-2411, nixpkgs-2505, nixie, poetry2nix, agenix }:
   let
     inputPkgs = import ./pkgs/mkInputPkgs.nix {
-      inherit nixpkgs nixpkgs-2411 poetry2nix agenix;
+      inherit nixpkgs nixpkgs-2411 nixpkgs-2505 poetry2nix agenix;
     };
     build = nixie.lib.flakes.mkOutputSetForCoreSystems inputPkgs;
     pkgs = build (import ./pkgs/mkSysOutput.nix);
@@ -38,7 +39,7 @@
     };
 
     nodes = import ./nodes {
-      nixosSystem = nixpkgs.lib.nixosSystem;
+      nixosSystem = nixpkgs-2505.lib.nixosSystem;
       odbox = self;
     };
   in

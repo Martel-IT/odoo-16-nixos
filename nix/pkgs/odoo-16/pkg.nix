@@ -5,12 +5,20 @@
   system,
   lib, stdenv, fetchzip, fetchFromGitHub,
   poetry2nix, python310,
-  rtlcss, wkhtmltopdf #, wkhtmltopdf-bin
+  rtlcss, wkhtmltopdf
 }:
 let
-  # isLinux = stdenv.isLinux;
-  # ifLinux = ps: if isLinux then ps else [];
-  # is-x86_64 = lib.strings.hasPrefix "x86_64" system;
+  python = python310.override {
+    packageOverrides = self: super: {
+      cffi = super.cffi.overrideAttrs (old: {
+        postUnpack = ''
+          find . -name "pyproject.toml" -type f -exec sed -i \
+            's/license = "MIT"/license = {text = "MIT"}/' {} \;
+        '';
+      });
+    };
+  };
+
   wkhtmltopdf-odoo = wkhtmltopdf;
 in 
 
@@ -22,27 +30,83 @@ in
   src = fetchFromGitHub {
     owner = "Martel-IT";
     repo = "odoo-16-core";
-    rev = "odoo-core-20250702-v9";
-    sha256 = "sha256-SkZS2LXmuDpe4si7cx49HfybmaqBXsoZ9qhzED9Z9+o=";
+    rev = "odoo-core-20251009";
+    sha256 = "sha256-hMLgXQvAyQkX/oM/UmoU/dyTXUGoVe+Lp/25e2fbJSM=";
   };
 
-                                                           # (2)
-  projectDir = "${src}/odoo-core-20250702-v9";
+  projectDir = "${src}/odoo-16-core-1.2";
   pyproject = ./pyproject.toml;
   poetrylock = ./poetry.lock;
-  python = python310;
+  inherit python;
 
-   patches = [
-     ./server.py.patch                                          # (3)
-   ];
+  overrides = poetry2nix.defaultPoetryOverrides.extend (self: super:
+    let
+      fixLicense = drv: drv.overridePythonAttrs (old: {
+        postUnpack = (old.postUnpack or "") + ''
+          find . -name "pyproject.toml" -type f -exec sed -i \
+            's/^license = "\([^"]*\)"$/license = {text = "\1"}/' {} \;
+        '';
+      });
+    in
+    {
+      jinja2 = super.jinja2.overridePythonAttrs (old: {
+        nativeBuildInputs = (old.nativeBuildInputs or []) ++ [ self.flit-core ];
+      });
+      
+      cffi = fixLicense super.cffi;
+      pyparsing = fixLicense super.pyparsing;
+      typing-extensions = fixLicense super.typing-extensions;
+      
+      # Patch aggressivo in 3 fasi diverse
+      soupsieve = super.soupsieve.overridePythonAttrs (old: {
+        postUnpack = (old.postUnpack or "") + ''
+          echo "DEBUG: Applico patch soupsieve in postUnpack"
+          # Rimuovi la linea "Programming Language :: Python :: 3.14" da pyproject.toml
+          find . -name "pyproject.toml" -type f -exec sed -i '/Programming Language :: Python :: 3.14/d' {} \;
+          # Aggiungo un'ulteriore verifica, anche se il find dovrebbe bastare.
+          if [ -f pyproject.toml ]; then
+            sed -i '/Programming Language :: Python :: 3.14/d' pyproject.toml
+          fi
+        '';
+        postPatch = (old.postPatch or "") + ''
+          echo "DEBUG: Patching soupsieve in postPatch"
+          if [ -f pyproject.toml ]; then
+            sed -i '/Programming Language :: Python :: 3.14/d' pyproject.toml
+          fi
+        '';
+        preBuild = (old.preBuild or "") + ''
+          echo "DEBUG: Patching soupsieve in preBuild"
+          if [ -f pyproject.toml ]; then
+            sed -i '/Programming Language :: Python :: 3.14/d' pyproject.toml
+          fi
+        '';
+      });
+      
+    urllib3 = super.urllib3.overridePythonAttrs (old: {
+        postUnpack = (old.postUnpack or "") + ''
+          echo "DEBUG: Patching urllib3 pyproject.toml"
+          # Correggi l'errore license-files E imposta la versione a 2.5.0,
+          # usando un solo find/sed per evitare problemi di newline con -exec.
+          find . -name "pyproject.toml" -type f -exec sed -i \
+            -e 's/^license-files = \[\(.*\)\]$/license-files = {paths = \[\1\]}/' \
+            -e '/version = {source = "vcs"}/c\version = "2.5.0"' {} \;
+        '';
 
-  doCheck = false;                                             # (4)
-  dontStrip = true;                                            # (5)
+       nativeBuildInputs = (old.nativeBuildInputs or []) ++ [ self.hatch-vcs ];
+      });
+    }
+  );
+
+  patches = [
+    ./server.py.patch
+  ];
+
+  doCheck = false;
+  dontStrip = true;
 
   makeWrapperArgs =
   let
     ps = [rtlcss wkhtmltopdf];
-    #ps = [ rtlcss ] ++ ifLinux [ wkhtmltopdf-odoo ];           # (1)
   in [
     "--prefix" "PATH" ":" "${lib.makeBinPath ps}"
   ];
@@ -99,4 +163,3 @@ in
 # 5.Stripping. The Odoo 15 package skips stripping, claiming it takes 5+
 # minutes and there are no files to strip. So we do the same.
 #
- 
