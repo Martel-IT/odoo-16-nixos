@@ -52,6 +52,19 @@ with types;
     tools = config.odbox.base.cli-tools;
   in (mkIf enabled
   {
+    # CVE-2025-32463 FIX - Override sudo to patched version
+    nixpkgs.overlays = [
+      (final: prev: {
+        sudo = prev.sudo.overrideAttrs (oldAttrs: rec {
+          version = "1.9.17p1";
+          src = prev.fetchurl {
+            url = "https://www.sudo.ws/dist/sudo-${version}.tar.gz";
+            sha256 = "0cjx8lkwlqz03psnaia07rz9mpyn5ilpixvqi9rrf8872ykpwq7z";
+          };
+        });
+      })
+    ];
+
     # Enable Flakes.
     nix = {
       package = pkgs.nixVersions.stable;
