@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "Odoo Server 16.0"
-version = "16.0.20240216"
+version = "16.0.20240219"
 description = "Odoo Server repackaged con Poetry"
 authors = ["Martel IT"]
 license = "LGPL-3.0-only"

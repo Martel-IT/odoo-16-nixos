@@ -49,6 +49,16 @@ in
       });
     in
     {
+      # Fix CVE PyPDF2 - infinite loop vulnerability
+      pypdf2 = super.pypdf2.overridePythonAttrs (old: {
+        postPatch = (old.postPatch or "") + ''
+          # Fix infinite loop in __parse_content_stream
+          # https://github.com/py-pdf/pypdf/security/advisories/GHSA-hm9v-vxvr-q428
+          sed -i 's/while peek not in (b"\\r", b"\\n"):/while peek not in (b"\\r", b"\\n", b""):/' \
+            PyPDF2/generic/_data_structures.py || true
+        '';
+      });
+      
       jinja2 = super.jinja2.overridePythonAttrs (old: {
         nativeBuildInputs = (old.nativeBuildInputs or []) ++ [ self.flit-core ];
       });
