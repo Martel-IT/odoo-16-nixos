@@ -5,9 +5,16 @@
   system,
   lib, stdenv, fetchzip, fetchFromGitHub,
   poetry2nix, python310,
-  rtlcss, wkhtmltopdf
+  rtlcss, wkhtmltopdf,
+  pkgs
 }:
 let
+  # Compila OpenSSL 3.4.1 custom da source
+  openssl_custom = import ./openssl-custom.nix { inherit lib stdenv; 
+    fetchurl = pkgs.fetchurl;
+    perl = pkgs.perl;
+  };
+  
   python = python310.override {
     packageOverrides = self: super: {
       cffi = super.cffi.overrideAttrs (old: {
@@ -49,6 +56,27 @@ in
       });
     in
     {
+      cryptography = super.cryptography.overridePythonAttrs (old: {
+        format = "pyproject";
+        preferWheels = false;
+        
+        buildInputs = (old.buildInputs or []) ++ [ openssl_custom ];
+        
+        OPENSSL_DIR = "${openssl_custom}";
+        OPENSSL_LIB_DIR = "${openssl_custom}/lib";
+        OPENSSL_INCLUDE_DIR = "${openssl_custom}/include";
+        
+        nativeBuildInputs = (old.nativeBuildInputs or []) ++ [ 
+          pkgs.rustc 
+          pkgs.cargo 
+          pkgs.pkg-config
+        ];
+        
+        dontCheckRuntimeDeps = true;
+        dontUseSetuptoolsCheck = true;
+        checkPhase = "";
+      });
+
       # Fix CVE PyPDF2 - infinite loop vulnerability
       pypdf2 = super.pypdf2.overridePythonAttrs (old: {
         postPatch = (old.postPatch or "") + ''
@@ -67,42 +95,32 @@ in
       pyparsing = fixLicense super.pyparsing;
       typing-extensions = fixLicense super.typing-extensions;
       
-      # Patch aggressivo in 3 fasi diverse
       soupsieve = super.soupsieve.overridePythonAttrs (old: {
         postUnpack = (old.postUnpack or "") + ''
-          echo "DEBUG: Applico patch soupsieve in postUnpack"
-          # Rimuovi la linea "Programming Language :: Python :: 3.14" da pyproject.toml
           find . -name "pyproject.toml" -type f -exec sed -i '/Programming Language :: Python :: 3.14/d' {} \;
-          # Aggiungo un'ulteriore verifica, anche se il find dovrebbe bastare.
           if [ -f pyproject.toml ]; then
             sed -i '/Programming Language :: Python :: 3.14/d' pyproject.toml
           fi
         '';
         postPatch = (old.postPatch or "") + ''
-          echo "DEBUG: Patching soupsieve in postPatch"
           if [ -f pyproject.toml ]; then
             sed -i '/Programming Language :: Python :: 3.14/d' pyproject.toml
           fi
         '';
         preBuild = (old.preBuild or "") + ''
-          echo "DEBUG: Patching soupsieve in preBuild"
           if [ -f pyproject.toml ]; then
             sed -i '/Programming Language :: Python :: 3.14/d' pyproject.toml
           fi
         '';
       });
       
-    urllib3 = super.urllib3.overridePythonAttrs (old: {
+      urllib3 = super.urllib3.overridePythonAttrs (old: {
         postUnpack = (old.postUnpack or "") + ''
-          echo "DEBUG: Patching urllib3 pyproject.toml"
-          # Correggi l'errore license-files E imposta la versione a 2.5.0,
-          # usando un solo find/sed per evitare problemi di newline con -exec.
           find . -name "pyproject.toml" -type f -exec sed -i \
             -e 's/^license-files = \[\(.*\)\]$/license-files = {paths = \[\1\]}/' \
             -e '/version = {source = "vcs"}/c\version = "2.5.0"' {} \;
         '';
-
-       nativeBuildInputs = (old.nativeBuildInputs or []) ++ [ self.hatch-vcs ];
+        nativeBuildInputs = (old.nativeBuildInputs or []) ++ [ self.hatch-vcs ];
       });
     }
   );
@@ -126,8 +144,7 @@ in
     homepage = "https://www.odoo.com/";
     license = licenses.lgpl3Only;
   };
-}
-# NOTE
+}# NOTE
 # ----
 # 1. wkhtmltopdf. See (1) in `wkhtmltopdf.nix` for the version we compile
 # as well as
