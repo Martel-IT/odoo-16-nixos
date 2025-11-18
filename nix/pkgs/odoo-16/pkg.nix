@@ -5,12 +5,27 @@
   system,
   lib, stdenv, fetchzip, fetchFromGitHub,
   poetry2nix, python310,
-  rtlcss, wkhtmltopdf #, wkhtmltopdf-bin
+  rtlcss, wkhtmltopdf,
+  pkgs
 }:
 let
-  # isLinux = stdenv.isLinux;
-  # ifLinux = ps: if isLinux then ps else [];
-  # is-x86_64 = lib.strings.hasPrefix "x86_64" system;
+  # Compila OpenSSL 3.4.1 custom da source
+  openssl_custom = import ./openssl-custom.nix { inherit lib stdenv; 
+    fetchurl = pkgs.fetchurl;
+    perl = pkgs.perl;
+  };
+  
+  python = python310.override {
+    packageOverrides = self: super: {
+      cffi = super.cffi.overrideAttrs (old: {
+        postUnpack = ''
+          find . -name "pyproject.toml" -type f -exec sed -i \
+            's/license = "MIT"/license = {text = "MIT"}/' {} \;
+        '';
+      });
+    };
+  };
+
   wkhtmltopdf-odoo = wkhtmltopdf;
 in 
 
@@ -22,27 +37,104 @@ in
   src = fetchFromGitHub {
     owner = "Martel-IT";
     repo = "odoo-16-core";
-    rev = "odoo-core-20250702-v9";
-    sha256 = "sha256-SkZS2LXmuDpe4si7cx49HfybmaqBXsoZ9qhzED9Z9+o=";
+    rev = "odoo-core-20251009";
+    sha256 = "sha256-hMLgXQvAyQkX/oM/UmoU/dyTXUGoVe+Lp/25e2fbJSM=";
   };
 
-                                                           # (2)
-  projectDir = "${src}/odoo-core-20250702-v9";
+  projectDir = "${src}/odoo-16-core-1.2";
   pyproject = ./pyproject.toml;
   poetrylock = ./poetry.lock;
-  python = python310;
+  inherit python;
 
-   patches = [
-     ./server.py.patch                                          # (3)
-   ];
+  overrides = poetry2nix.defaultPoetryOverrides.extend (self: super:
+    let
+      fixLicense = drv: drv.overridePythonAttrs (old: {
+        postUnpack = (old.postUnpack or "") + ''
+          find . -name "pyproject.toml" -type f -exec sed -i \
+            's/^license = "\([^"]*\)"$/license = {text = "\1"}/' {} \;
+        '';
+      });
+    in
+    {
+      cryptography = super.cryptography.overridePythonAttrs (old: {
+        format = "pyproject";
+        preferWheels = false;
+        
+        buildInputs = (old.buildInputs or []) ++ [ openssl_custom ];
+        
+        OPENSSL_DIR = "${openssl_custom}";
+        OPENSSL_LIB_DIR = "${openssl_custom}/lib";
+        OPENSSL_INCLUDE_DIR = "${openssl_custom}/include";
+        
+        nativeBuildInputs = (old.nativeBuildInputs or []) ++ [ 
+          pkgs.rustc 
+          pkgs.cargo 
+          pkgs.pkg-config
+        ];
+        
+        dontCheckRuntimeDeps = true;
+        dontUseSetuptoolsCheck = true;
+        checkPhase = "";
+      });
 
-  doCheck = false;                                             # (4)
-  dontStrip = true;                                            # (5)
+      # Fix CVE PyPDF2 - infinite loop vulnerability
+      pypdf2 = super.pypdf2.overridePythonAttrs (old: {
+        postPatch = (old.postPatch or "") + ''
+          # Fix infinite loop in __parse_content_stream
+          # https://github.com/py-pdf/pypdf/security/advisories/GHSA-hm9v-vxvr-q428
+          sed -i 's/while peek not in (b"\\r", b"\\n"):/while peek not in (b"\\r", b"\\n", b""):/' \
+            PyPDF2/generic/_data_structures.py || true
+        '';
+      });
+      
+      jinja2 = super.jinja2.overridePythonAttrs (old: {
+        nativeBuildInputs = (old.nativeBuildInputs or []) ++ [ self.flit-core ];
+      });
+      
+      cffi = fixLicense super.cffi;
+      pyparsing = fixLicense super.pyparsing;
+      typing-extensions = fixLicense super.typing-extensions;
+      
+      soupsieve = super.soupsieve.overridePythonAttrs (old: {
+        postUnpack = (old.postUnpack or "") + ''
+          find . -name "pyproject.toml" -type f -exec sed -i '/Programming Language :: Python :: 3.14/d' {} \;
+          if [ -f pyproject.toml ]; then
+            sed -i '/Programming Language :: Python :: 3.14/d' pyproject.toml
+          fi
+        '';
+        postPatch = (old.postPatch or "") + ''
+          if [ -f pyproject.toml ]; then
+            sed -i '/Programming Language :: Python :: 3.14/d' pyproject.toml
+          fi
+        '';
+        preBuild = (old.preBuild or "") + ''
+          if [ -f pyproject.toml ]; then
+            sed -i '/Programming Language :: Python :: 3.14/d' pyproject.toml
+          fi
+        '';
+      });
+      
+      urllib3 = super.urllib3.overridePythonAttrs (old: {
+        postUnpack = (old.postUnpack or "") + ''
+          find . -name "pyproject.toml" -type f -exec sed -i \
+            -e 's/^license-files = \[\(.*\)\]$/license-files = {paths = \[\1\]}/' \
+            -e '/version = {source = "vcs"}/c\version = "2.5.0"' {} \;
+        '';
+        nativeBuildInputs = (old.nativeBuildInputs or []) ++ [ self.hatch-vcs ];
+      });
+    }
+  );
+
+  patches = [
+    ./server.py.patch
+  ];
+
+  doCheck = false;
+  dontStrip = true;
 
   makeWrapperArgs =
   let
     ps = [rtlcss wkhtmltopdf];
-    #ps = [ rtlcss ] ++ ifLinux [ wkhtmltopdf-odoo ];           # (1)
   in [
     "--prefix" "PATH" ":" "${lib.makeBinPath ps}"
   ];
@@ -52,8 +144,7 @@ in
     homepage = "https://www.odoo.com/";
     license = licenses.lgpl3Only;
   };
-}
-# NOTE
+}# NOTE
 # ----
 # 1. wkhtmltopdf. See (1) in `wkhtmltopdf.nix` for the version we compile
 # as well as
@@ -99,4 +190,3 @@ in
 # 5.Stripping. The Odoo 15 package skips stripping, claiming it takes 5+
 # minutes and there are no files to strip. So we do the same.
 #
- 

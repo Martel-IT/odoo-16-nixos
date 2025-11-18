@@ -45,6 +45,13 @@ with types;
         clear-text password.
       '';
     };
+    odbox.vault.age.cloudflare-tunnel-token = mkOption {
+      type = nullOr path;
+      default = null;
+      description = ''
+        Age-encrypted file containing the Cloudflare Tunnel token.
+      '';
+    };    
     odbox.vault.age.nginx-cert = mkOption {
       type = nullOr path;
       default = null;

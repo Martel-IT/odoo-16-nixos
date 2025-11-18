@@ -12,7 +12,7 @@ in {
   imports = [ "${modulesPath}/virtualisation/amazon-image.nix" ];
 
   time.timeZone = "Europe/Amsterdam";
-  system.stateVersion = "23.11";
+  system.stateVersion = "24.11";
 
   fileSystems."${backup-mount-dir}" = {
     device = "/dev/disk/by-partlabel/backup";                  # (3)
@@ -34,6 +34,8 @@ in {
       age = {
         odoo-admin-pwd = ./vault/passwords/odoo-admin.txt.age;
         pgadmin-admin-pwd = ./vault/passwords/pgadmin-admin.txt.age;
+        cloudflare-tunnel-token = ./vault/passwords/tunnel-token.txt.age;
+
       };
       root-ssh-file = ./vault/ssh/id_rsa.pub;                  # (1)
       admin-ssh-file = ./vault/ssh/id_rsa.pub;                 # (1)
@@ -41,7 +43,7 @@ in {
     login.admin-email = "sys-admin@martel-innovate.com";
     service-stack = {
       autocerts = true;
-      domain = "odoo.martel-innovate.com";
+      domain = "staging-odoo16.martel-innovate.com";
       odoo-cpus = 2;
       odoo-session-timeout = 14 * 24 * 60;
     };

@@ -80,6 +80,12 @@ with types;
       user = pgadmin;
       group = pgadmin;
     };
+    cf-tunnel = {
+      encryptedFile = config.odbox.vault.age.cloudflare-tunnel-token;
+      decryptedFile = "${dir}/passwords/tunnel-token.txt";
+      user = "cloudflared";
+      group = "cloudflared";
+    };    
     cert = {
       encryptedFile = config.odbox.vault.age.nginx-cert;
       decryptedFile = "${dir}/certs/nginx-cert.pem";
@@ -99,6 +105,7 @@ with types;
             ++ addIf (!has-autocerts) cert
             ++ addIf (!has-autocerts) cert-key
             ++ addIf has-pgadmin pgadmin-admin
+            ++ addIf (cf-tunnel.encryptedFile != null) cf-tunnel
             ;
   in (mkIf enabled
   {
@@ -109,6 +116,7 @@ with types;
       pgadmin-admin-pwd-file = pgadmin-admin.decryptedFile;
       nginx-cert = cert.decryptedFile;
       nginx-cert-key = cert-key.decryptedFile;
+      cloudflare-tunnel-token-file = cf-tunnel.decryptedFile;
     };
     system.activationScripts.age-start = {
       text = activation.makeDecryptionScript ageFiles;
