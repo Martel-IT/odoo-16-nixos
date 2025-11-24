@@ -73,21 +73,24 @@ with lib;
         # SECRET_KEY - IMPORTANTE: cambia questo valore in produzione!
         SECRET_KEY = '0AQu.£)qMM9VA`8b69{087:dh49]H\fA1$Q}ihP%'
         
-        # Configurazioni per reverse proxy
-        APPLICATION_ROOT = '/pgadmin'
-        PREFERRED_URL_SCHEME = 'https'
-        
-        # FIX: Configura correttamente il proxy
+        # Reverse proxy configuration
+        APPLICATION_ROOT = '/'
+        # NOTE: Cloudflare Tunnel terminates HTTPS and forwards to pgAdmin via local HTTP
+        # Using 'http' allows both SSH tunnel and Cloudflare tunnel access
+        PREFERRED_URL_SCHEME = 'http'
+
+        # FIX: Configure proxy headers correctly
         PROXY_X_FOR_COUNT = 1
         PROXY_X_PROTO_COUNT = 1
         PROXY_X_HOST_COUNT = 1
-        
-        # Configurazioni sicure per cookies
-        SESSION_COOKIE_SECURE = True
+
+        # Cookie configuration (compatible with local HTTP)
+        # SECURE=False is OK because HTTPS traffic is terminated by Cloudflare
+        SESSION_COOKIE_SECURE = False
         SESSION_COOKIE_HTTPONLY = True
         SESSION_COOKIE_SAMESITE = 'Lax'
         SESSION_COOKIE_NAME = 'pgadmin_session'
-        SESSION_COOKIE_PATH = '/pgadmin'
+        SESSION_COOKIE_PATH = '/'
         PERMANENT_SESSION_LIFETIME = 7200
         
         # FIX CSRF: Più permissivo per reverse proxy
