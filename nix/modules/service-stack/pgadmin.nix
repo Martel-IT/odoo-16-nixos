@@ -79,6 +79,12 @@ with lib;
         # Using 'http' allows both SSH tunnel and Cloudflare tunnel access
         PREFERRED_URL_SCHEME = 'http'
 
+        # Allowed hosts for CSRF protection with Cloudflare Tunnel
+        ALLOWED_HOSTS = ['pgadmin.martel-innovate.com', 'localhost', '127.0.0.1']
+
+        # CSRF trusted origins for Cloudflare Tunnel
+        WTF_CSRF_TRUSTED_ORIGINS = ['https://pgadmin.martel-innovate.com']
+
         # FIX: Configure proxy headers correctly
         PROXY_X_FOR_COUNT = 1
         PROXY_X_PROTO_COUNT = 1
